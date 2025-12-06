@@ -19,12 +19,13 @@
                     <line x1="3" y1="18" x2="21" y2="18"></line>
                 </svg>
             </button>
+            <!-- LOGO DO HEADER IA SYSTEM -->
             <div class="logo">
-                <img src="img/ia-system.png" alt="Logo IA Sistem">
+                <img src="img/Logoatend.png" alt="Logo IA Sistem">
             </div>
-            <div class="brand">
-                <h2>IA SISTEM</h2>
-                <p>Sistema de Gerenciamento</p>
+           <div class="brand">
+                <h2 style="color: #FFFFFF">IA SISTEM</h2>
+                <p style="color: #b9ba6b;">Sistema de Gerenciamento</p>
             </div>
         </div>
 
@@ -67,7 +68,7 @@
                 <ul class="sidebar-menu">
                     <li><a href="atendimento.html">Dashboard</a></li>
                     <li><a href="atendimento.html">Atendimento</a></li>
-                    <li><a href="clientes.html" class="active">Clientes</a></li>
+                    <li><a href="clientes.html" class="active">Cliente</a></li>
                     <li><a href="atendimento.html">Financeiro</a></li>
                     <li><a href="estoque.html">Estoque</a></li>
                     <li><a href="os.html">O.S</a></li>
@@ -281,6 +282,7 @@
     <!-- Scripts -->
     <script src="js/storage.js"></script>
     <script src="js/auth.js"></script>
+    <script src="js/api.js"></script>
     <script src="js/clientes.js"></script>
     <script>
         // ========================================
@@ -671,7 +673,7 @@
         });
 
         // Evento do formulário
-        document.getElementById('formCliente').addEventListener('submit', function(e) {
+        document.getElementById('formCliente').addEventListener('submit', async function(e) {
             e.preventDefault();
 
             const formData = new FormData(this);
@@ -691,26 +693,27 @@
 
             const clienteId = document.getElementById('clienteId').value;
 
-            if (clienteId) {
-                // Atualizar cliente existente
-                if (atualizarCliente(clienteId, dados)) {
+            try {
+                if (clienteId) {
+                    // Atualizar cliente existente
+                    await atualizarCliente(clienteId, dados);
                     alert('Cliente atualizado com sucesso!');
                     fecharModal();
                     aplicarFiltros();
                     atualizarEstatisticas();
                 } else {
-                    alert('Erro ao atualizar cliente. Tente novamente.');
-                }
-            } else {
-                // Adicionar novo cliente
-                if (adicionarCliente(dados)) {
+                    // Adicionar novo cliente
+                    await adicionarCliente(dados);
                     alert('Cliente cadastrado com sucesso!');
                     fecharModal();
                     aplicarFiltros();
                     atualizarEstatisticas();
-                } else {
-                    alert('Erro ao cadastrar cliente. Tente novamente.');
                 }
+            } catch (erro) {
+                // Exibe a mensagem de erro do backend se disponível
+                const mensagemErro = erro.message || 'Erro ao processar a solicitação. Tente novamente.';
+                alert('❌ Erro: ' + mensagemErro);
+                console.error('Erro ao salvar cliente:', erro);
             }
         });
 
@@ -787,14 +790,15 @@
         // INICIALIZAÇÃO
         // ============================
 
-        document.addEventListener('DOMContentLoaded', function() {
+        document.addEventListener('DOMContentLoaded', async function() {
             // Protege a página
             protegerPagina();
             
             // Atualiza informações do usuário
             atualizarInfoUsuario();
             
-            // Aplica filtros iniciais
+            // Carrega clientes da API e aplica filtros iniciais
+            await carregarClientes();
             aplicarFiltros();
             atualizarEstatisticas();
             

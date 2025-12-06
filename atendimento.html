@@ -20,11 +20,11 @@
                 </svg>
             </button>
             <div class="logo">
-                <img src="img/ia-system.png" alt="Logo IA Sistem">
+                <img src="img/Logoatend.png" alt="Logo IA Sistem">
             </div>
             <div class="brand">
-                <h2>IA SISTEM</h2>
-                <p>Sistema de Gerenciamento</p>
+                <h2 style="color: #FFFFFF">IA SISTEM</h2>
+                <p style="color: #b9ba6b;">Sistema de Gerenciamento</p>
             </div>
         </div>
 
@@ -87,8 +87,8 @@
         <!-- CONTEÚDO -->
         <main class="content">
             <div class="page-header">
-                <h1>Dashboard - Atendimento</h1>
-                <div class="breadcrumb">Dashboard / Atendimento</div>
+                <h1 style="color: #FFFFFF;">Dashboard - Atendimento</h1> <!--SUBTÍTULO TELA PRINCIPAL-->
+                <div class="breadcrumb"; style="color:#fef3c7" >Dashboard / Atendimento</div>
             </div>
 
             <!-- CARDS DE ESTATÍSTICAS -->
@@ -330,15 +330,13 @@
     <!-- Scripts -->
     <script src="js/storage.js"></script>
     <script src="js/auth.js"></script>
+    <script src="js/api.js"></script>
     <script src="js/clientes.js"></script>
     <script src="js/estoque.js"></script>
     <script>
         // ========================================
         // SCRIPT DA PÁGINA DE ATENDIMENTO
         // ========================================
-
-        // Chave para armazenar OS no localStorage
-        const CHAVE_OS = 'ia_sistem_os';
 
         // Array que mantém as OS em memória
         let osEmMemoria = [];
@@ -358,37 +356,55 @@
         // ============================
 
         /**
-         * Carrega todas as OS do localStorage
+         * Carrega todas as OS da API
          */
-        function carregarOS() {
-            const os = recuperarDados(CHAVE_OS);
-            osEmMemoria = os || [];
-            return osEmMemoria;
+        async function carregarOS() {
+            try {
+                const os = await listarOSApi();
+                osEmMemoria = os.map(o => ({
+                    ...o,
+                    cliente: o.clienteNome,
+                    dataCriacao: o.dataCriacao,
+                    dataAtualizacao: o.dataAtualizacao,
+                    id: o.id
+                }));
+                return osEmMemoria;
+            } catch (error) {
+                console.error('Erro ao carregar OS:', error);
+                osEmMemoria = [];
+                return osEmMemoria;
+            }
         }
 
         /**
-         * Salva todas as OS no localStorage
+         * Adiciona uma nova OS via API
          */
-        function salvarOS() {
-            return salvarDados(CHAVE_OS, osEmMemoria);
-        }
+        async function adicionarOS(os) {
+            try {
+                // Mapear dados para API
+                const dadosApi = {
+                    clienteId: parseInt(os.cliente),
+                    tipoAparelho: os.tipoAparelho,
+                    marcaModelo: os.marcaModelo,
+                    problemaRelatado: os.problemaRelatado,
+                    prioridade: os.prioridade || 'normal',
+                    prazoEstimado: parseInt(os.prazoEstimado) || 3
+                };
 
-        /**
-         * Adiciona uma nova OS
-         */
-        function adicionarOS(os) {
-            const proximoNumero = gerarProximoNumeroOS();
-            os.numeroOS = proximoNumero;
-            os.id = gerarId();
-            os.dataCriacao = new Date().toISOString();
-            os.dataAtualizacao = new Date().toISOString();
-            os.status = os.status || 'aguardando';
-            
-            osEmMemoria.push(os);
-            salvarOS();
-            
-            console.log('✅ OS adicionada:', os.numeroOS);
-            return os;
+                const novaOS = await criarOSApi(dadosApi);
+
+                // Adicionar à memória local
+                osEmMemoria.push({
+                    ...novaOS,
+                    cliente: novaOS.clienteNome
+                });
+
+                console.log('✅ OS adicionada:', novaOS.numeroOS);
+                return novaOS;
+            } catch (error) {
+                console.error('Erro ao adicionar OS:', error);
+                throw error;
+            }
         }
 
         /**
@@ -621,16 +637,16 @@
         function abrirNovaOS() {
             const modal = document.getElementById('modalNovaOS');
             const selectCliente = document.getElementById('clienteOS');
-            
+
             // Carrega clientes no select
             selectCliente.innerHTML = '<option value="">Selecione o cliente...</option>';
             clientesEmMemoria.forEach(cliente => {
                 const option = document.createElement('option');
-                option.value = cliente.nome;
+                option.value = cliente.id;
                 option.textContent = cliente.nome;
                 selectCliente.appendChild(option);
             });
-            
+
             modal.classList.add('active');
         }
 
@@ -696,37 +712,45 @@
         });
 
         // Evento do formulário de nova OS
-        document.getElementById('formNovaOS').addEventListener('submit', function(e) {
-                e.preventDefault();
-
-            const formData = new FormData(this);
-            const dados = Object.fromEntries(formData.entries());
-
-            if (adicionarOS(dados)) {
-                alert('O.S criada com sucesso!');
-                fecharModal();
-                renderizarTabelaOS();
-                atualizarEstatisticas();
-                this.reset();
-            } else {
-                alert('Erro ao criar O.S. Tente novamente.');
-            }
-        });
-
-        // Evento do formulário de novo cliente
-        document.getElementById('formNovoCliente').addEventListener('submit', function(e) {
+        document.getElementById('formNovaOS').addEventListener('submit', async function(e) {
             e.preventDefault();
 
             const formData = new FormData(this);
             const dados = Object.fromEntries(formData.entries());
 
-            if (adicionarCliente(dados)) {
+            try {
+                await adicionarOS(dados);
+                alert('O.S criada com sucesso!');
+                fecharModal();
+                renderizarTabelaOS();
+                atualizarEstatisticas();
+                this.reset();
+            } catch (error) {
+                // Exibe a mensagem de erro do backend se disponível
+                const mensagemErro = error.message || 'Erro ao processar a solicitação. Tente novamente.';
+                alert('❌ Erro: ' + mensagemErro);
+                console.error('Erro ao criar OS:', error);
+            }
+        });
+
+        // Evento do formulário de novo cliente
+        document.getElementById('formNovoCliente').addEventListener('submit', async function(e) {
+            e.preventDefault();
+
+            const formData = new FormData(this);
+            const dados = Object.fromEntries(formData.entries());
+
+            try {
+                await adicionarCliente(dados);
                 alert('Cliente cadastrado com sucesso!');
                 fecharModal();
                 atualizarEstatisticas();
                 this.reset();
-            } else {
-                alert('Erro ao cadastrar cliente. Tente novamente.');
+            } catch (erro) {
+                // Exibe a mensagem de erro do backend se disponível
+                const mensagemErro = erro.message || 'Erro ao processar a solicitação. Tente novamente.';
+                alert('❌ Erro: ' + mensagemErro);
+                console.error('Erro ao cadastrar cliente:', erro);
             }
         });
 
@@ -826,23 +850,23 @@
         // INICIALIZAÇÃO
         // ============================
 
-        document.addEventListener('DOMContentLoaded', function() {
+        document.addEventListener('DOMContentLoaded', async function() {
             // Protege a página
             protegerPagina();
-            
+
             // Atualiza informações do usuário
             atualizarInfoUsuario();
-            
+
             // Carrega dados
-            carregarOS();
-            carregarClientes();
+            await carregarOS();
+            await carregarClientes();
             carregarProdutos();
-            
+
             // Renderiza interface
             renderizarTabelaOS();
             renderizarAlertas();
             atualizarEstatisticas();
-            
+
             console.log('✅ Página de atendimento carregada!');
         });
     </script>

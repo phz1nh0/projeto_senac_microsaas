@@ -6,14 +6,14 @@
 
         :root {
             --primary-blue: #0891b2;
-            --dark-blue: #1e3a8a;
-            --light-blue: #0ea5e9;
+            --dark-blue: #0F3C4B; /*BARRA LATERAL*/
+            --light-blue: #007BFF;  /*BOTÃO DOS ICONES*/
             --green: #10b981;
             --yellow: #fbbf24;
             --red: #ef4444;
-            --gray-light: #f3f4f6;
-            --gray-medium: #9ca3af;
-            --gray-dark: #374151;
+            --gray-light: #345a7d; /*COR FUNDO PRINCIPAL*/
+            --gray-medium: #445169; /*SUBTITULO DOS ICONES*/
+            --gray-dark: #0F3C4B; /*TITULO DE ALERTAS E NOTIFICAÇÕES*/
         }
 
         body {
@@ -23,12 +23,12 @@
 
         /* HEADER */
         .header {
-            background: white;
+            background: #18415b;
             padding: 15px 30px;
             display: flex;
             align-items: center;
             justify-content: space-between;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            box-shadow: 0 2px 4px rgba(255, 3, 3, 0.1);
             position: sticky;
             top: 0;
             z-index: 100;
@@ -57,7 +57,6 @@
             width: 100%;
             height: 100%;
             object-fit: cover;
-            border-radius: 50%;
             transition: transform 0.3s ease;
         }
 
@@ -223,7 +222,7 @@
             background: white;
             padding: 25px;
             border-radius: 12px;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+            box-shadow: 0 2px 8px rgba(141, 14, 14, 0.08);
             cursor: pointer;
             transition: all 0.3s;
             border: 2px solid transparent;
@@ -263,7 +262,7 @@
             background: white;
             border-radius: 12px;
             padding: 25px;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+            box-shadow: 0 2px 8px rgba(0,0,0,0.08); /*FUNDO BRILHANTE*/
             margin-bottom: 30px;
         }
 

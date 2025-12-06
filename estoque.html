@@ -20,11 +20,11 @@
                 </svg>
             </button>
             <div class="logo">
-                <img src="img/ia-system.png" alt="Logo IA Sistem">
+                <img src="img/Logoatend.png" alt="Logo IA Sistem">
             </div>
-            <div class="brand">
-                <h2>IA SISTEM</h2>
-                <p>Sistema de Gerenciamento</p>
+           <div class="brand">
+                <h2 style="color: #FFFFFF">IA SISTEM</h2>
+                <p style="color: #b9ba6b;">Sistema de Gerenciamento</p>
             </div>
         </div>
 
@@ -309,6 +309,7 @@
     <!-- Scripts -->
     <script src="js/storage.js"></script>
     <script src="js/auth.js"></script>
+    <script src="js/api.js"></script>
     <script src="js/estoque.js"></script>
     <script>
         // ========================================
@@ -338,44 +339,7 @@
             });
         });
 
-        // Evento do formulário
-        document.getElementById('formProduto').addEventListener('submit', function(e) {
-            e.preventDefault();
-
-            const formData = new FormData(this);
-            const dados = Object.fromEntries(formData.entries());
-
-            // Validação
-            const validacao = validarFormularioProduto(dados);
-            if (!validacao.valido) {
-                alert('Erro na validação:\n' + validacao.erros.join('\n'));
-                return;
-            }
-
-            const produtoId = document.getElementById('produtoId').value;
-
-            if (produtoId) {
-                // Atualizar produto existente
-                if (atualizarProduto(produtoId, dados)) {
-                    alert('Produto atualizado com sucesso!');
-                    fecharModal();
-                    aplicarFiltros();
-                    atualizarEstatisticas();
-                } else {
-                    alert('Erro ao atualizar produto. Tente novamente.');
-                }
-            } else {
-                // Adicionar novo produto
-                if (adicionarProduto(dados)) {
-                    alert('Produto cadastrado com sucesso!');
-                    fecharModal();
-                    aplicarFiltros();
-                    atualizarEstatisticas();
-                } else {
-                    alert('Erro ao cadastrar produto. Tente novamente.');
-                }
-            }
-        });
+        // Evento do formulário é tratado no estoque.js
 
         // Formatação automática de campos monetários
         document.getElementById('precoCusto').addEventListener('input', function(e) {

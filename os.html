@@ -20,11 +20,11 @@
                 </svg>
             </button>
             <div class="logo">
-                <img src="img/ia-system.png" alt="Logo IA Sistem">
+                <img src="img/Logoatend.png" alt="Logo IA Sistem">
             </div>
-            <div class="brand">
-                <h2>IA SISTEM</h2>
-                <p>Sistema de Gerenciamento</p>
+           <div class="brand">
+                <h2 style="color: #FFFFFF">IA SISTEM</h2>
+                <p style="color: #b9ba6b;">Sistema de Gerenciamento</p>
             </div>
         </div>
 
@@ -332,14 +332,12 @@
     <!-- Scripts -->
     <script src="js/storage.js"></script>
     <script src="js/auth.js"></script>
+    <script src="js/api.js"></script>
     <script src="js/clientes.js"></script>
     <script>
         // ========================================
         // SCRIPT DA PÁGINA DE ORDENS DE SERVIÇO
         // ========================================
-
-        // Chave para armazenar OS no localStorage
-        const CHAVE_OS = 'ia_sistem_os';
 
         // Array que mantém as OS em memória durante a sessão
         let osEmMemoria = [];
@@ -365,84 +363,93 @@
         // ============================
 
         /**
-         * Carrega todas as OS do localStorage
+         * Carrega todas as OS da API
          */
-        function carregarOS() {
-            const os = recuperarDados(CHAVE_OS);
-            osEmMemoria = os || [];
-            return osEmMemoria;
-        }
-
-        /**
-         * Salva todas as OS no localStorage
-         */
-        function salvarOS() {
-            return salvarDados(CHAVE_OS, osEmMemoria);
-        }
-
-        /**
-         * Adiciona uma nova OS
-         */
-        function adicionarOS(os) {
-            // Gera número da OS
-            const proximoNumero = gerarProximoNumeroOS();
-            os.numeroOS = proximoNumero;
-            os.id = gerarId();
-            os.dataCriacao = new Date().toISOString();
-            os.dataAtualizacao = new Date().toISOString();
-            os.status = os.status || 'aguardando';
-            
-            // Adiciona ao array
-            osEmMemoria.push(os);
-            
-            // Salva no localStorage
-            salvarOS();
-            
-            console.log('✅ OS adicionada:', os.numeroOS);
-            return os;
-        }
-
-        /**
-         * Atualiza uma OS existente
-         */
-        function atualizarOS(id, dadosAtualizados) {
-            const indice = osEmMemoria.findIndex(o => o.id === id);
-            
-            if (indice === -1) {
-                console.error('❌ OS não encontrada:', id);
-                return false;
+        async function carregarOS() {
+            try {
+                const os = await listarOSApi();
+                osEmMemoria = os.map(o => ({
+                    ...o,
+                    cliente: o.clienteNome,
+                    dataCriacao: o.dataCriacao,
+                    dataAtualizacao: o.dataAtualizacao,
+                    id: o.id
+                }));
+                return osEmMemoria;
+            } catch (error) {
+                console.error('Erro ao carregar OS:', error);
+                osEmMemoria = [];
+                return osEmMemoria;
             }
-            
-            // Mantém ID e data de criação, atualiza o resto
-            dadosAtualizados.id = id;
-            dadosAtualizados.numeroOS = osEmMemoria[indice].numeroOS;
-            dadosAtualizados.dataCriacao = osEmMemoria[indice].dataCriacao;
-            dadosAtualizados.dataAtualizacao = new Date().toISOString();
-            
-            osEmMemoria[indice] = dadosAtualizados;
-            salvarOS();
-            
-            console.log('✅ OS atualizada:', dadosAtualizados.numeroOS);
-            return true;
+        }
+
+
+
+        /**
+         * Adiciona uma nova OS via API
+         */
+        async function adicionarOS(os) {
+            try {
+                // Mapear dados para API
+                const dadosApi = {
+                    clienteId: parseInt(os.cliente),
+                    tipoAparelho: os.tipoAparelho,
+                    marcaModelo: os.marcaModelo,
+                    problemaRelatado: os.problemaRelatado,
+                    prioridade: os.prioridade || 'normal',
+                    prazoEstimado: parseInt(os.prazoEstimado) || 3,
+                    diagnosticoTecnico: os.diagnosticoTecnico,
+                    valorOrcamento: os.valorOrcamento ? parseFloat(os.valorOrcamento.replace('R$ ', '').replace(',', '.')) : null,
+                    status: os.status || 'aguardando',
+                    observacoes: os.observacoes
+                };
+
+                const novaOS = await criarOSApi(dadosApi);
+
+                // Adicionar à memória local
+                osEmMemoria.push({
+                    ...novaOS,
+                    cliente: novaOS.clienteNome
+                });
+
+                console.log('✅ OS adicionada:', novaOS.numeroOS);
+                return novaOS;
+            } catch (error) {
+                console.error('Erro ao adicionar OS:', error);
+                throw error;
+            }
         }
 
         /**
-         * Remove uma OS
+         * Atualiza uma OS existente via API
          */
-        function removerOS(id) {
-            const indice = osEmMemoria.findIndex(o => o.id === id);
-            
-            if (indice === -1) {
-                console.error('❌ OS não encontrada:', id);
-                return false;
+        async function atualizarOS(id, dadosAtualizados) {
+            try {
+                await atualizarOSApi(id, dadosAtualizados);
+                // Recarregar OS
+                await carregarOS();
+                console.log('✅ OS atualizada:', id);
+                return true;
+            } catch (error) {
+                console.error('Erro ao atualizar OS:', error);
+                throw error;
             }
-            
-            const numeroOS = osEmMemoria[indice].numeroOS;
-            osEmMemoria.splice(indice, 1);
-            salvarOS();
-            
-            console.log('✅ OS removida:', numeroOS);
-            return true;
+        }
+
+        /**
+         * Remove uma OS via API
+         */
+        async function removerOS(id) {
+            try {
+                await deletarOSApi(id);
+                // Recarregar OS
+                await carregarOS();
+                console.log('✅ OS removida:', id);
+                return true;
+            } catch (error) {
+                console.error('Erro ao remover OS:', error);
+                throw error;
+            }
         }
 
         /**
@@ -758,10 +765,10 @@
         function carregarClientesSelect() {
             const selectCliente = document.getElementById('cliente');
             selectCliente.innerHTML = '<option value="">Selecione o cliente...</option>';
-            
+
             clientesEmMemoria.forEach(cliente => {
                 const option = document.createElement('option');
-                option.value = cliente.nome;
+                option.value = cliente.id;
                 option.textContent = cliente.nome;
                 selectCliente.appendChild(option);
             });
@@ -942,16 +949,17 @@
         /**
          * Exclui OS
          */
-        function excluirOS(id) {
+        async function excluirOS(id) {
             const os = buscarOSPorId(id);
             if (!os) return;
 
             if (confirm(`Tem certeza que deseja excluir a O.S "${os.numeroOS}"?\n\nEsta ação não pode ser desfeita.`)) {
-                if (removerOS(id)) {
+                try {
+                    await removerOS(id);
                     alert('O.S excluída com sucesso!');
                     aplicarFiltros();
                     atualizarEstatisticas();
-                } else {
+                } catch (error) {
                     alert('Erro ao excluir O.S. Tente novamente.');
                 }
             }
@@ -1008,7 +1016,7 @@
         });
 
         // Evento do formulário
-        document.getElementById('formOS').addEventListener('submit', function(e) {
+        document.getElementById('formOS').addEventListener('submit', async function(e) {
             e.preventDefault();
 
             const formData = new FormData(this);
@@ -1023,26 +1031,44 @@
 
             const osId = document.getElementById('osId').value;
 
-            if (osId) {
-                // Atualizar OS existente
-                if (atualizarOS(osId, dados)) {
+            try {
+                if (osId) {
+                    // Atualizar OS existente
+                    const dadosApi = {
+                        clienteId: parseInt(dados.cliente),
+                        tipoAparelho: dados.tipoAparelho,
+                        marcaModelo: dados.marcaModelo,
+                        problemaRelatado: dados.problemaRelatado,
+                        prioridade: dados.prioridade || 'normal',
+                        prazoEstimado: parseInt(dados.prazoEstimado) || 3,
+                        diagnosticoTecnico: dados.diagnosticoTecnico,
+                        valorOrcamento: dados.valorOrcamento ? parseFloat(dados.valorOrcamento.replace('R$ ', '').replace(',', '.')) : null,
+                        status: dados.status || 'aguardando',
+                        observacoes: dados.observacoes
+                    };
+
+                    await atualizarOSApi(osId, dadosApi);
+
+                    // Recarregar OS
+                    await carregarOS();
+
                     alert('O.S atualizada com sucesso!');
                     fecharModal();
                     aplicarFiltros();
                     atualizarEstatisticas();
                 } else {
-                    alert('Erro ao atualizar O.S. Tente novamente.');
-                }
-            } else {
-                // Adicionar nova OS
-                if (adicionarOS(dados)) {
+                    // Adicionar nova OS
+                    await adicionarOS(dados);
                     alert('O.S criada com sucesso!');
                     fecharModal();
                     aplicarFiltros();
                     atualizarEstatisticas();
-                } else {
-                    alert('Erro ao criar O.S. Tente novamente.');
                 }
+            } catch (error) {
+                // Exibe a mensagem de erro do backend se disponível
+                const mensagemErro = error.message || 'Erro ao processar a solicitação. Tente novamente.';
+                alert('❌ Erro: ' + mensagemErro);
+                console.error('Erro ao salvar OS:', error);
             }
         });
 
@@ -1119,21 +1145,21 @@
         // INICIALIZAÇÃO
         // ============================
 
-        document.addEventListener('DOMContentLoaded', function() {
+        document.addEventListener('DOMContentLoaded', async function() {
             // Protege a página
             protegerPagina();
-            
+
             // Atualiza informações do usuário
             atualizarInfoUsuario();
-            
+
             // Carrega dados
-            carregarOS();
-            carregarClientes();
-            
+            await carregarOS();
+            await carregarClientes();
+
             // Aplica filtros iniciais
             aplicarFiltros();
             atualizarEstatisticas();
-            
+
             console.log('✅ Página de O.S carregada!');
         });
     </script>
