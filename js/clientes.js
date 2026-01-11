@@ -41,6 +41,12 @@ async function adicionarCliente(cliente) {
         const criado = await criarClienteApi(cliente);
         clientesEmMemoria.push(criado);
         console.log('✅ Cliente adicionado:', criado.nome);
+
+        // Atualiza notificações se disponível
+        if (window.notificationManager) {
+            window.notificationManager.atualizarContador();
+        }
+
         return criado;
     } catch (e) {
         console.error('❌ Erro ao adicionar cliente:', e);

@@ -912,6 +912,11 @@
                 atualizarEstatisticas();
                 aplicarFiltros();
 
+                // Atualiza notificações se disponível
+                if (window.notificationManager) {
+                    window.notificationManager.atualizarContador();
+                }
+
                 console.log(`✅ Status da OS ${os.numeroOS} alterado para: ${getStatusText(novoStatus)}`);
 
             } catch (error) {
@@ -1068,6 +1073,12 @@
                         // Atualizar OS existente
                         if (atualizarOS(osId, dados)) {
                             alert('O.S atualizada com sucesso!');
+
+                            // Atualiza notificações se disponível
+                            if (window.notificationManager) {
+                                window.notificationManager.atualizarContador();
+                            }
+
                             fecharModal();
                             aplicarFiltros();
                             atualizarEstatisticas();

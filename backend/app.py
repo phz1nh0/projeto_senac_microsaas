@@ -122,6 +122,11 @@ def create_app():
             # Se não encontrar o logo, retorna uma resposta vazia
             return '', 204
 
+    # Rota para configuração específica do Chrome DevTools (suprime logs de 404)
+    @app.route('/.well-known/appspecific/com.chrome.devtools.json')
+    def chrome_devtools_config():
+        return '', 404
+
     # Error handlers globais para garantir retorno JSON nas rotas da API
     @app.errorhandler(IntegrityError)
     def handle_integrity_error(e):

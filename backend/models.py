@@ -4,9 +4,9 @@ from extensions import db
 
 
 class TimestampMixin:
-    criado_em = db.Column(db.DateTime, default=datetime.utcnow)
+    criado_em = db.Column(db.DateTime, default=datetime.now)
     atualizado_em = db.Column(
-        db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow
+        db.DateTime, default=datetime.now, onupdate=datetime.now
     )
 
 
